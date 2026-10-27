@@ -14,6 +14,8 @@
             --accent-success: #10b981;
             --accent-warning: #f59e0b;
             --accent-danger: #ef4444;
+            --accent-madi: #8b5cf6; /* Morado para Madi */
+            --accent-integra: #06b6d4; /* Cian para Integra */
             --border-color: #334155;
             --radius: 12px;
         }
@@ -223,7 +225,6 @@
         .btn-success { background: var(--accent-success); color: white; }
         .btn-warning { background: var(--accent-warning); color: #0f172a; }
         .btn-primary { background: var(--accent-primary); color: white; }
-        .btn-danger { background: var(--accent-danger); color: white; }
         .btn:active { opacity: 0.8; }
 
         /* Listados Diarios */
@@ -246,10 +247,22 @@
         .record-item.desembolso { border-left-color: var(--accent-success); }
         .record-item.renovacion { border-left-color: var(--accent-warning); }
 
+        .badge-tipo {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-right: 6px;
+            color: white;
+        }
+        .badge-madi { background: var(--accent-madi); }
+        .badge-integra { background: var(--accent-integra); color: #0f172a; }
+
         .record-header {
             display: flex;
             justify-content: space-between;
-            font-weight: bold;
+            align-items: center;
             margin-bottom: 6px;
             font-size: 0.9rem;
         }
@@ -297,7 +310,7 @@
 <body>
 
     <header>
-        <h1>Agenda Líder Desembolsos y Renovaciones</h1>
+        <h1>Agenda Lider</h1>
         <p style="font-size: 0.8rem; color: var(--text-muted);" id="currentDateHeader"></p>
     </header>
 
@@ -308,7 +321,7 @@
         <button class="nav-tab" onclick="switchTab('respaldo')">Respaldo</button>
     </div>
 
-    <!-- CALENDAR COMPONENT (Común para ambas secciones operativas) -->
+    <!-- CALENDAR COMPONENT -->
     <div class="calendar-card">
         <div class="calendar-header">
             <button onclick="changeMonth(-1)">‹</button>
@@ -332,6 +345,13 @@
         <div class="card">
             <h3>🟢 Registrar Desembolso</h3>
             <form id="formDesembolso" onsubmit="guardarDesembolso(event)">
+                <div class="form-group">
+                    <label>Tipo de Captura</label>
+                    <select class="form-control" id="desTipoCaptura" required>
+                        <option value="Madi">Madi</option>
+                        <option value="Integra">Integra</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Nombre de Grupo</label>
                     <input type="text" class="form-control" id="desGrupo" required placeholder="Ej. Las Margaritas">
@@ -388,6 +408,13 @@
             <h3>🟡 Registrar Renovación</h3>
             <form id="formRenovacion" onsubmit="guardarRenovacion(event)">
                 <div class="form-group">
+                    <label>Tipo de Captura</label>
+                    <select class="form-control" id="renTipoCaptura" required>
+                        <option value="Madi">Madi</option>
+                        <option value="Integra">Integra</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Nombre de Grupo</label>
                     <input type="text" class="form-control" id="renGrupo" required placeholder="Ej. Los Girasoles">
                 </div>
@@ -441,7 +468,6 @@
     </div>
 
     <script>
-        // Estado Global de la App
         let db = JSON.parse(localStorage.getItem('agenda_financiera_db')) || { desembolsos: {}, renovaciones: {} };
         
         let currentDate = new Date();
@@ -459,7 +485,6 @@
             renderCalendar();
             renderSelectedDayData();
             
-            // Poner hora actual por defecto en los inputs de tiempo
             const nowTime = new Date().toTimeString().substring(0, 5);
             document.getElementById('desHora').value = nowTime;
             document.getElementById('renHora').value = nowTime;
@@ -491,17 +516,15 @@
             const grid = document.getElementById('calendarDaysGrid');
             grid.innerHTML = '';
 
-            const firstDayIndex = (new Date(calYear, calMonth, 1).getDay() + 6) % 7; // Lunes como inicio
+            const firstDayIndex = (new Date(calYear, calMonth, 1).getDay() + 6) % 7; 
             const totalDays = new Date(calYear, calMonth + 1, 0).getDate();
             const todayStr = formatDateKey(new Date());
 
-            // Espacios vacíos iniciales
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
                 grid.appendChild(emptyCell);
             }
 
-            // Días del mes
             for (let day = 1; day <= totalDays; day++) {
                 const dateCellStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const cell = document.createElement('div');
@@ -511,7 +534,6 @@
 
                 cell.innerHTML = `<span>${day}</span>`;
 
-                // Indicadores visuales si hay registros
                 let hasDes = db.desembolsos[dateCellStr] && db.desembolsos[dateCellStr].length > 0;
                 let hasRen = db.renovaciones[dateCellStr] && db.renovaciones[dateCellStr].length > 0;
                 
@@ -538,6 +560,7 @@
             e.preventDefault();
             const item = {
                 id: Date.now(),
+                tipoCaptura: document.getElementById('desTipoCaptura').value,
                 grupo: document.getElementById('desGrupo').value,
                 renovados: parseInt(document.getElementById('desRenovados').value) || 0,
                 nuevos: parseInt(document.getElementById('desNuevos').value) || 0,
@@ -549,8 +572,6 @@
 
             if (!db.desembolsos[selectedDateStr]) db.desembolsos[selectedDateStr] = [];
             db.desembolsos[selectedDateStr].push(item);
-            
-            // Ordenar por hora
             db.desembolsos[selectedDateStr].sort((a, b) => a.hora.localeCompare(b.hora));
 
             persistAndRefresh();
@@ -562,6 +583,7 @@
             e.preventDefault();
             const item = {
                 id: Date.now(),
+                tipoCaptura: document.getElementById('renTipoCaptura').value,
                 grupo: document.getElementById('renGrupo').value,
                 integrantes: parseInt(document.getElementById('renIntegrantes').value) || 0,
                 mac: parseInt(document.getElementById('renMac').value) || 0,
@@ -571,8 +593,6 @@
 
             if (!db.renovaciones[selectedDateStr]) db.renovaciones[selectedDateStr] = [];
             db.renovaciones[selectedDateStr].push(item);
-            
-            // Ordenar por hora
             db.renovaciones[selectedDateStr].sort((a, b) => a.hora.localeCompare(b.hora));
 
             persistAndRefresh();
@@ -600,16 +620,18 @@
             if (desList.length === 0) {
                 containerDes.innerHTML = `<div class="empty-state">No hay desembolsos registrados para este día.</div>`;
             } else {
-                desList.forEach((item, idx) => {
+                desList.forEach((item) => {
                     totalCartera += item.cartera;
                     totalTdd += item.tdd;
                     totalPolizas += item.polizas;
                     totalInt += (item.renovados + item.nuevos);
 
+                    const badgeClass = item.tipoCaptura === 'Madi' ? 'badge-madi' : 'badge-integra';
+
                     containerDes.innerHTML += `
                         <div class="record-item desembolso">
                             <div class="record-header">
-                                <span>⏰ ${item.hora} - ${item.grupo}</span>
+                                <span><span class="badge-tipo ${badgeClass}">${item.tipoCaptura}</span> ⏰ ${item.hora} - ${item.grupo}</span>
                                 <span style="color: var(--accent-success);">$${item.cartera.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
                             </div>
                             <div class="record-details">
@@ -638,14 +660,16 @@
             if (renList.length === 0) {
                 containerRen.innerHTML = `<div class="empty-state">No hay renovaciones registradas para este día.</div>`;
             } else {
-                renList.forEach((item, idx) => {
+                renList.forEach((item) => {
                     totalRenInt += item.integrantes;
                     totalRenMac += item.mac;
+
+                    const badgeClass = item.tipoCaptura === 'Madi' ? 'badge-madi' : 'badge-integra';
 
                     containerRen.innerHTML += `
                         <div class="record-item renovacion">
                             <div class="record-header">
-                                <span>⏰ ${item.hora} - ${item.grupo}</span>
+                                <span><span class="badge-tipo ${badgeClass}">${item.tipoCaptura}</span> ⏰ ${item.hora} - ${item.grupo}</span>
                                 <span style="color: var(--accent-warning);">MAC: ${item.mac}</span>
                             </div>
                             <div class="record-details" style="grid-template-columns: 1fr;">
@@ -702,7 +726,6 @@
             reader.readAsText(file);
         }
 
-        // Iniciar aplicación al cargar
         window.onload = initApp;
     </script>
 </body>

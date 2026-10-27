@@ -1,849 +1,709 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Agenda Personal Alondra - Desembolsos y Renovaciones</title>
-    <!-- Tailwind CSS CDN para un diseño moderno y responsive -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                            800: '#0c4a6e',
-                            900: '#0f172a',
-                        },
-                        renov: {
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Iconos Phosphor -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Personal - Desembolsos y Renovaciones</title>
     <style>
-        /* Desactivar selección de texto pesada en móviles para sentirlo como app nativa */
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-color: #334155;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
         body {
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
         }
-        input, textarea, select {
-            user-select: text;
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
         }
-        /* Scrollbar personalizada */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+
+        header h1 {
+            font-size: 1.3rem;
+            color: var(--accent-primary);
+            margin-bottom: 4px;
         }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.5);
-            border-radius: 9999px;
+
+        /* Pestañas de Navegación */
+        .nav-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 4px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tab.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Vistas / Secciones */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* Calendario */
+        .calendar-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .calendar-header button {
+            background: var(--border-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .calendar-day-name {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: bold;
+            padding-bottom: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .calendar-day:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .calendar-day.selected {
+            background: var(--accent-primary);
+            color: white;
+            font-weight: bold;
+        }
+
+        .calendar-day.today {
+            border-color: var(--accent-warning);
+        }
+
+        .indicators {
+            display: flex;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+        }
+
+        .dot-des { background: var(--accent-success); }
+        .dot-ren { background: var(--accent-warning); }
+
+        /* Formularios y Tarjetas */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-success { background: var(--accent-success); color: white; }
+        .btn-warning { background: var(--accent-warning); color: #0f172a; }
+        .btn-primary { background: var(--accent-primary); color: white; }
+        .btn-danger { background: var(--accent-danger); color: white; }
+        .btn:active { opacity: 0.8; }
+
+        /* Listados Diarios */
+        .date-selected-title {
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .record-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 4px solid var(--accent-primary);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        .record-item.desembolso { border-left-color: var(--accent-success); }
+        .record-item.renovacion { border-left-color: var(--accent-warning); }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .record-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .summary-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .summary-metric {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .summary-metric span {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .summary-metric strong {
+            font-size: 0.95rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+            font-size: 0.85rem;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between pb-20">
+<body>
 
-    <!-- Encabezado Principal -->
-    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 shadow-md px-4 py-3">
-        <div class="max-w-md mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <i class="ph ph-calendar-check text-2xl text-sky-400"></i>
-                <h1 class="text-lg font-bold tracking-wide text-white">Mi Agenda Personal</h1>
-            </div>
-            <div id="statusBadge" class="text-xs px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 font-medium flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Local</span>
-            </div>
-        </div>
+    <header>
+        <h1>Agenda Financiera</h1>
+        <p style="font-size: 0.8rem; color: var(--text-muted);" id="currentDateHeader"></p>
     </header>
 
-    <!-- Navegación Principal (Tabs Superiores) -->
-    <nav class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-[53px] z-20">
-        <div class="max-w-md mx-auto flex justify-around">
-            <button id="tabDesembolsos" onclick="switchSection('desembolsos')" class="flex-1 py-3 px-2 text-center border-b-2 border-sky-500 font-semibold text-sky-400 flex flex-col items-center gap-1 transition-all">
-                <i class="ph ph-hand-coins text-xl"></i>
-                <span class="text-xs">DESEMBOLSOS</span>
-            </button>
-            <button id="tabRenovaciones" onclick="switchSection('renovaciones')" class="flex-1 py-3 px-2 text-center border-b-2 border-transparent font-semibold text-slate-400 hover:text-slate-200 flex flex-col items-center gap-1 transition-all">
-                <i class="ph ph-arrows-counter-clockwise text-xl"></i>
-                <span class="text-xs">RENOVACIONES</span>
-            </button>
-            <button id="tabRespaldo" onclick="switchSection('respaldo')" class="flex-1 py-3 px-2 text-center border-b-2 border-transparent font-semibold text-slate-400 hover:text-slate-200 flex flex-col items-center gap-1 transition-all">
-                <i class="ph ph-floppy-disk text-xl"></i>
-                <span class="text-xs">RESPALDO</span>
-            </button>
+    <!-- Navegación -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('desembolsos')">Desembolsos</button>
+        <button class="nav-tab" onclick="switchTab('renovaciones')">Renovaciones</button>
+        <button class="nav-tab" onclick="switchTab('respaldo')">Respaldo</button>
+    </div>
+
+    <!-- CALENDAR COMPONENT (Común para ambas secciones operativas) -->
+    <div class="calendar-card">
+        <div class="calendar-header">
+            <button onclick="changeMonth(-1)">‹</button>
+            <h2 id="calendarMonthYear" style="font-size: 0.95rem;">Mes Año</h2>
+            <button onclick="changeMonth(1)">›</button>
         </div>
-    </nav>
+        <div class="calendar-grid" id="calendarDaysNames">
+            <div class="calendar-day-name">L</div>
+            <div class="calendar-day-name">M</div>
+            <div class="calendar-day-name">Mi</div>
+            <div class="calendar-day-name">J</div>
+            <div class="calendar-day-name">V</div>
+            <div class="calendar-day-name">S</div>
+            <div class="calendar-day-name">D</div>
+        </div>
+        <div class="calendar-grid" id="calendarDaysGrid" style="margin-top: 4px;"></div>
+    </div>
 
-    <!-- Contenido Principal -->
-    <main class="max-w-md mx-auto w-full p-4 flex-1">
+    <!-- SECCIÓN DESEMBOLSOS -->
+    <div id="section-desembolsos" class="view-section active">
+        <div class="card">
+            <h3>🟢 Registrar Desembolso</h3>
+            <form id="formDesembolso" onsubmit="guardarDesembolso(event)">
+                <div class="form-group">
+                    <label>Nombre de Grupo</label>
+                    <input type="text" class="form-control" id="desGrupo" required placeholder="Ej. Las Margaritas">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Integrantes Renovados</label>
+                        <input type="number" class="form-control" id="desRenovados" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Integrantes Nuevos</label>
+                        <input type="number" class="form-control" id="desNuevos" min="0" value="0" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Número de TDD</label>
+                        <input type="number" class="form-control" id="desTdd" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Pólizas Familiares</label>
+                        <input type="number" class="form-control" id="desPolizas" min="0" value="0" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Cartera Desembolsada ($)</label>
+                        <input type="number" step="0.01" class="form-control" id="desCartera" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hora de Desembolso</label>
+                        <input type="time" class="form-control" id="desHora" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Guardar Desembolso</button>
+            </form>
+        </div>
 
-        <!-- ================= VISTA DE CALENDARIO Y REGISTROS ================= -->
-        <section id="sectionMain" class="space-y-4">
+        <!-- Listado del día seleccionado -->
+        <div class="card">
+            <div class="date-selected-title" id="titleDesDia">Registros del Día</div>
+            <div class="summary-box" id="summaryDes">
+                <div class="summary-metric"><span>Cartera</span><strong id="sumCartera">$0.00</strong></div>
+                <div class="summary-metric"><span>TDD / Pólizas</span><strong id="sumTddPol">0 / 0</strong></div>
+                <div class="summary-metric"><span>Integrantes</span><strong id="sumIntegrantes">0</strong></div>
+            </div>
+            <div id="listDesembolsos"></div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN RENOVACIONES -->
+    <div id="section-renovaciones" class="view-section">
+        <div class="card">
+            <h3>🟡 Registrar Renovación</h3>
+            <form id="formRenovacion" onsubmit="guardarRenovacion(event)">
+                <div class="form-group">
+                    <label>Nombre de Grupo</label>
+                    <input type="text" class="form-control" id="renGrupo" required placeholder="Ej. Los Girasoles">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Número de Integrantes</label>
+                        <input type="number" class="form-control" id="renIntegrantes" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Aperturas MAC</label>
+                        <input type="number" class="form-control" id="renMac" min="0" value="0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nombres de quienes aperturarán</label>
+                    <input type="text" class="form-control" id="renNombresApertura" required placeholder="Ej. Ana, Carlos, María">
+                </div>
+                <div class="form-group">
+                    <label>Horario de Apertura</label>
+                    <input type="time" class="form-control" id="renHora" required>
+                </div>
+                <button type="submit" class="btn btn-warning">Guardar Renovación</button>
+            </form>
+        </div>
+
+        <!-- Listado del día seleccionado -->
+        <div class="card">
+            <div class="date-selected-title" id="titleRenDia">Registros de Renovaciones del Día</div>
+            <div class="summary-box" style="grid-template-columns: 1fr 1fr;">
+                <div class="summary-metric"><span>Total Integrantes</span><strong id="sumRenIntegrantes">0</strong></div>
+                <div class="summary-metric"><span>Total Aperturas MAC</span><strong id="sumRenMac">0</strong></div>
+            </div>
+            <div id="listRenovaciones"></div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN RESPALDO -->
+    <div id="section-respaldo" class="view-section">
+        <div class="card">
+            <h3>💾 Respaldo Local (JSON)</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                Tus datos se guardan automáticamente en la memoria de este teléfono. Puedes exportarlos a un archivo para respaldarlos o importarlos en otro dispositivo.
+            </p>
+            <button class="btn btn-primary" style="margin-bottom: 10px;" onclick="exportarRespaldo()">Exportar Archivo de Respaldo</button>
             
-            <!-- Calendario Card -->
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-lg">
-                <!-- Selector de Mes / Año -->
-                <div class="flex items-center justify-between mb-4">
-                    <button onclick="changeMonth(-1)" class="p-2 text-slate-300 hover:bg-slate-700 rounded-xl transition">
-                        <i class="ph ph-caret-left text-lg"></i>
-                    </button>
-                    <h2 id="calendarTitle" class="text-base font-bold text-white capitalize">Cargando...</h2>
-                    <button onclick="changeMonth(1)" class="p-2 text-slate-300 hover:bg-slate-700 rounded-xl transition">
-                        <i class="ph ph-caret-right text-lg"></i>
-                    </button>
-                </div>
-
-                <!-- Días de la semana -->
-                <div class="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-slate-400 mb-2">
-                    <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-                </div>
-
-                <!-- Días del Mes (Grid dinámico) -->
-                <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-sm">
-                    <!-- Días inyectados con JavaScript -->
-                </div>
-            </div>
-
-            <!-- Cabecera de Día Seleccionado y Botón Agregar -->
-            <div class="flex items-center justify-between pt-2">
-                <div>
-                    <h3 id="selectedDateTitle" class="text-lg font-bold text-white">Fecha seleccionada</h3>
-                    <p id="sectionSubtext" class="text-xs text-slate-400">Listado de registros del día</p>
-                </div>
-                <button onclick="openModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 shadow-lg shadow-sky-900/40 active:scale-95 transition">
-                    <i class="ph ph-plus-circle text-lg"></i>
-                    <span>Nuevo</span>
-                </button>
-            </div>
-
-            <!-- Resumen Estadístico Diario -->
-            <div id="dailySummary" class="grid grid-cols-2 gap-2 text-xs">
-                <!-- Inyectado por JS -->
-            </div>
-
-            <!-- Lista de Registros Ordenados Cronológicamente -->
-            <div id="recordsList" class="space-y-3 pt-1">
-                <!-- Inyectado por JS -->
-            </div>
-        </section>
-
-        <!-- ================= VISTA DE RESPALDO Y ARCHIVOS ================= -->
-        <section id="sectionRespaldo" class="hidden space-y-4">
-            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700 space-y-4">
-                <div class="flex items-center space-x-3 text-sky-400">
-                    <i class="ph ph-shield-check text-3xl"></i>
-                    <div>
-                        <h2 class="text-base font-bold text-white">Respaldo Local de Datos</h2>
-                        <p class="text-xs text-slate-400">Guarda o restaura tus registros en la memoria de tu teléfono.</p>
-                    </div>
-                </div>
-
-                <hr class="border-slate-700">
-
-                <!-- Exportar -->
-                <div class="space-y-2">
-                    <h3 class="text-sm font-semibold text-slate-200">1. Exportar Copia de Seguridad</h3>
-                    <p class="text-xs text-slate-400">Descarga un archivo con todos tus datos registrados de desembolsos y renovaciones.</p>
-                    <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-sky-400 border border-sky-500/30 font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 active:scale-98 transition">
-                        <i class="ph ph-download-simple text-lg"></i>
-                        <span>Descargar Archivo (.JSON)</span>
-                    </button>
-                </div>
-
-                <hr class="border-slate-700">
-
-                <!-- Importar -->
-                <div class="space-y-2">
-                    <h3 class="text-sm font-semibold text-slate-200">2. Restaurar Copia de Seguridad</h3>
-                    <p class="text-xs text-slate-400">Selecciona un archivo JSON generado previamente para recuperar tus registros.</p>
-                    <label class="w-full bg-slate-700 hover:bg-slate-600 text-emerald-400 border border-emerald-500/30 font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition">
-                        <i class="ph ph-upload-simple text-lg"></i>
-                        <span>Cargar Archivo Backup</span>
-                        <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
-                    </label>
-                </div>
-
-                <hr class="border-slate-700">
-
-                <!-- Borrar Todo -->
-                <div class="space-y-2 pt-2">
-                    <h3 class="text-sm font-semibold text-rose-400">Zona de Peligro</h3>
-                    <button onclick="clearAllData()" class="w-full bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 active:scale-98 transition">
-                        <i class="ph ph-trash text-lg"></i>
-                        <span>Borrar Todos los Datos</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- ================= MODAL DE REGISTRO (FORMULARIOS) ================= -->
-    <div id="recordModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
-        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200">
-            
-            <!-- Header Modal -->
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/90">
-                <div class="flex items-center gap-2">
-                    <i id="modalIcon" class="ph ph-plus-circle text-xl text-sky-400"></i>
-                    <h3 id="modalTitle" class="font-bold text-white text-base">Nuevo Registro</h3>
-                </div>
-                <button onclick="closeModal()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition">
-                    <i class="ph ph-x text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Body Modal (Formulario Scrollable) -->
-            <div class="p-4 overflow-y-auto space-y-4 flex-1">
-                <form id="recordForm" onsubmit="saveRecord(event)" class="space-y-3">
-                    <input type="hidden" id="editRecordId">
-
-                    <!-- Campos Formularios según Categoría -->
-                    
-                    <!-- Campo Común: Nombre del Grupo -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre de Grupo *</label>
-                        <input type="text" id="nombreGrupo" required placeholder="Ej: Las Emprendedoras" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
-                    </div>
-
-                    <!-- DESEMBOLSOS SPECIFIC FIELDS -->
-                    <div id="fieldsDesembolso" class="space-y-3">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Integrantes Renovados</label>
-                                <input type="number" min="0" id="numRenovados" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Integrantes Nuevos</label>
-                                <input type="number" min="0" id="numNuevos" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Número de TDD</label>
-                                <input type="number" min="0" id="numTdd" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Pólizas Familiar</label>
-                                <input type="number" min="0" id="numPolizas" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">Cartera Desembolsada ($) *</label>
-                            <input type="number" step="0.01" min="0" id="carteraDesembolsada" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">Hora de Desembolso *</label>
-                            <input type="time" id="horaDesembolso" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
-                        </div>
-                    </div>
-
-                    <!-- RENOVACIONES SPECIFIC FIELDS -->
-                    <div id="fieldsRenovacion" class="space-y-3 hidden">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Nº Integrantes *</label>
-                                <input type="number" min="1" id="numIntegrantesRenov" value="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Nº Aperturas MAC</label>
-                                <input type="number" min="0" id="numMac" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">Nombres de quienes aperturarán MAC</label>
-                            <textarea id="nombresAperturan" rows="2" placeholder="Ej: María López, Juan Pérez..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">Horario de Apertura *</label>
-                            <input type="time" id="horaApertura" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
-                        </div>
-                    </div>
-
-                    <!-- Observaciones (Común) -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Notas / Observaciones</label>
-                        <textarea id="observaciones" rows="2" placeholder="Detalles adicionales..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500"></textarea>
-                    </div>
-
-                    <!-- Botones Modal -->
-                    <div class="pt-3 flex gap-2">
-                        <button type="button" onclick="closeModal()" class="flex-1 bg-slate-700 text-slate-300 py-3 rounded-xl font-semibold text-sm active:scale-95 transition">
-                            Cancelar
-                        </button>
-                        <button type="submit" id="btnSaveRecord" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white py-3 rounded-xl font-semibold text-sm shadow-lg active:scale-95 transition">
-                            Guardar
-                        </button>
-                    </div>
-                </form>
+            <div class="form-group" style="margin-top: 16px;">
+                <label>Importar Respaldo Anterior</label>
+                <input type="file" class="form-control" id="importFile" accept=".json" onchange="importarRespaldo(event)">
             </div>
         </div>
     </div>
 
-    <!-- Menú/Notificación Flotante Toast -->
-    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white border border-slate-700 px-4 py-2.5 rounded-full shadow-2xl text-xs font-medium flex items-center gap-2 opacity-0 pointer-events-none transition-all z-50">
-        <i id="toastIcon" class="ph ph-check-circle text-emerald-400 text-base"></i>
-        <span id="toastMessage">Operación realizada</span>
-    </div>
-
-    <!-- ================= JAVASCRIPT ================= -->
     <script>
-        // ESTADO GLOBAL DE LA APLICACIÓN
-        let currentSection = 'desembolsos'; // 'desembolsos', 'renovaciones', 'respaldo'
-        let currentDate = new Date(); // Fecha actual para navegación en calendario
-        let selectedDateStr = formatDateKey(new Date()); // Formato YYYY-MM-DD
+        // Estado Global de la App
+        let db = JSON.parse(localStorage.getItem('agenda_financiera_db')) || { desembolsos: {}, renovaciones: {} };
         
-        // Estructura de Datos en LocalStorage: { "YYYY-MM-DD": [ { id, category, group, time, ... }, ... ] }
-        let agendaData = {};
+        let currentDate = new Date();
+        let selectedDateStr = formatDateKey(currentDate);
 
-        // INICIALIZACIÓN AL CARGAR
-        window.onload = function() {
-            loadFromLocalStorage();
-            renderCalendar();
-            renderDailyRecords();
-        };
-
-        // Formatear Fecha a YYYY-MM-DD para claves
         function formatDateKey(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
         }
 
-        // Cargar desde LocalStorage
-        function loadFromLocalStorage() {
-            try {
-                const stored = localStorage.getItem('agenda_desembolsos_renovaciones');
-                if (stored) {
-                    agendaData = JSON.parse(stored);
-                }
-            } catch (e) {
-                console.error("Error al cargar localStorage:", e);
-                showToast("Error al cargar datos locales", "error");
-            }
-        }
-
-        // Guardar en LocalStorage
-        function saveToLocalStorage() {
-            try {
-                localStorage.setItem('agenda_desembolsos_renovaciones', JSON.stringify(agendaData));
-            } catch (e) {
-                console.error("Error al guardar en localStorage:", e);
-                showToast("Error al guardar datos", "error");
-            }
-        }
-
-        // Cambio de Secciones principales (Tabs)
-        function switchSection(section) {
-            currentSection = section;
-
-            // Actualizar Estilos Tab
-            const tabDes = document.getElementById('tabDesembolsos');
-            const tabRen = document.getElementById('tabRenovaciones');
-            const tabRes = document.getElementById('tabRespaldo');
-
-            const sectionMain = document.getElementById('sectionMain');
-            const sectionRespaldo = document.getElementById('sectionRespaldo');
-
-            // Reset tabs
-            [tabDes, tabRen, tabRes].forEach(tab => {
-                tab.className = "flex-1 py-3 px-2 text-center border-b-2 border-transparent font-semibold text-slate-400 hover:text-slate-200 flex flex-col items-center gap-1 transition-all";
-            });
-
-            if (section === 'desembolsos') {
-                tabDes.className = "flex-1 py-3 px-2 text-center border-b-2 border-sky-500 font-semibold text-sky-400 flex flex-col items-center gap-1 transition-all";
-                sectionMain.classList.remove('hidden');
-                sectionRespaldo.classList.add('hidden');
-            } else if (section === 'renovaciones') {
-                tabRen.className = "flex-1 py-3 px-2 text-center border-b-2 border-emerald-500 font-semibold text-emerald-400 flex flex-col items-center gap-1 transition-all";
-                sectionMain.classList.remove('hidden');
-                sectionRespaldo.classList.add('hidden');
-            } else if (section === 'respaldo') {
-                tabRes.className = "flex-1 py-3 px-2 text-center border-b-2 border-amber-500 font-semibold text-amber-400 flex flex-col items-center gap-1 transition-all";
-                sectionMain.classList.add('hidden');
-                sectionRespaldo.classList.remove('hidden');
-            }
-
+        function initApp() {
+            document.getElementById('currentDateHeader').innerText = currentDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             renderCalendar();
-            renderDailyRecords();
+            renderSelectedDayData();
+            
+            // Poner hora actual por defecto en los inputs de tiempo
+            const nowTime = new Date().toTimeString().substring(0, 5);
+            document.getElementById('desHora').value = nowTime;
+            document.getElementById('renHora').value = nowTime;
         }
 
-        // RENDERING DEL CALENDARIO
+        function switchTab(tabName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`section-${tabName}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // --- CALENDARIO ---
+        let calYear = currentDate.getFullYear();
+        let calMonth = currentDate.getMonth();
+
+        function changeMonth(dir) {
+            calMonth += dir;
+            if (calMonth > 11) { calMonth = 0; calYear++; }
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            renderCalendar();
+        }
+
         function renderCalendar() {
-            const calendarTitle = document.getElementById('calendarTitle');
-            const calendarGrid = document.getElementById('calendarGrid');
-
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-
-            // Título del Mes
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            calendarTitle.textContent = `${monthNames[month]} ${year}`;
+            document.getElementById('calendarMonthYear').innerText = `${monthNames[calMonth]} ${calYear}`;
 
-            calendarGrid.innerHTML = '';
+            const grid = document.getElementById('calendarDaysGrid');
+            grid.innerHTML = '';
 
-            // Obtener primer día de la semana y total de días
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const totalDays = new Date(year, month + 1, 0).getDate();
+            const firstDayIndex = (new Date(calYear, calMonth, 1).getDay() + 6) % 7; // Lunes como inicio
+            const totalDays = new Date(calYear, calMonth + 1, 0).getDate();
+            const todayStr = formatDateKey(new Date());
 
-            // Espacios en blanco para inicio de mes
+            // Espacios vacíos iniciales
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = "h-10 rounded-xl bg-slate-800/30";
-                calendarGrid.appendChild(emptyCell);
+                grid.appendChild(emptyCell);
             }
 
             // Días del mes
-            const todayStr = formatDateKey(new Date());
-
             for (let day = 1; day <= totalDays; day++) {
-                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dateCellStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const cell = document.createElement('div');
+                cell.className = `calendar-day`;
+                if (dateCellStr === selectedDateStr) cell.classList.add('selected');
+                if (dateCellStr === todayStr) cell.classList.add('today');
+
+                cell.innerHTML = `<span>${day}</span>`;
+
+                // Indicadores visuales si hay registros
+                let hasDes = db.desembolsos[dateCellStr] && db.desembolsos[dateCellStr].length > 0;
+                let hasRen = db.renovaciones[dateCellStr] && db.renovaciones[dateCellStr].length > 0;
                 
-                const dayBtn = document.createElement('button');
-                dayBtn.onclick = () => selectDate(dateKey);
-
-                // Comprobar si hay registros en esta fecha para la categoría actual
-                const dayRecords = agendaData[dateKey] || [];
-                const filteredRecords = dayRecords.filter(r => r.category === currentSection);
-                const hasRecords = filteredRecords.length > 0;
-
-                const isSelected = dateKey === selectedDateStr;
-                const isToday = dateKey === todayStr;
-
-                // Estilos base de las casillas de día
-                let bgClass = "bg-slate-700/50 hover:bg-slate-700 text-slate-200";
-                if (isSelected) {
-                    bgClass = currentSection === 'desembolsos' 
-                        ? "bg-sky-600 text-white font-bold ring-2 ring-sky-400 shadow-lg" 
-                        : "bg-emerald-600 text-white font-bold ring-2 ring-emerald-400 shadow-lg";
-                } else if (isToday) {
-                    bgClass = "bg-slate-700 text-sky-400 font-bold border border-sky-500/50";
+                if (hasDes || hasRen) {
+                    const ind = document.createElement('div');
+                    ind.className = 'indicators';
+                    if (hasDes) { const d1 = document.createElement('div'); d1.className = 'dot dot-des'; ind.appendChild(d1); }
+                    if (hasRen) { const d2 = document.createElement('div'); d2.className = 'dot dot-ren'; ind.appendChild(d2); }
+                    cell.appendChild(ind);
                 }
 
-                dayBtn.className = `h-10 rounded-xl ${bgClass} flex flex-col items-center justify-center relative transition active:scale-95`;
-                
-                // HTML interno con indicador badge
-                let badgeColor = currentSection === 'desembolsos' ? 'bg-sky-400' : 'bg-emerald-400';
-                dayBtn.innerHTML = `
-                    <span class="text-xs">${day}</span>
-                    ${hasRecords ? `<span class="w-1.5 h-1.5 ${badgeColor} rounded-full absolute bottom-1"></span>` : ''}
-                `;
+                cell.onclick = () => {
+                    selectedDateStr = dateCellStr;
+                    renderCalendar();
+                    renderSelectedDayData();
+                };
 
-                calendarGrid.appendChild(dayBtn);
+                grid.appendChild(cell);
             }
         }
 
-        // Navegación de Meses
-        function changeMonth(delta) {
-            currentDate.setMonth(currentDate.getMonth() + delta);
-            renderCalendar();
-        }
-
-        // Selección de Día
-        function selectDate(dateKey) {
-            selectedDateStr = dateKey;
-            renderCalendar();
-            renderDailyRecords();
-        }
-
-        // RENDERING DE REGISTROS DEL DÍA
-        function renderDailyRecords() {
-            const recordsList = document.getElementById('recordsList');
-            const selectedDateTitle = document.getElementById('selectedDateTitle');
-            const dailySummary = document.getElementById('dailySummary');
-            const sectionSubtext = document.getElementById('sectionSubtext');
-
-            // Formatear Fecha Titular
-            const parts = selectedDateStr.split('-');
-            const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            const options = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
-            selectedDateTitle.textContent = dObj.toLocaleDateString('es-ES', options);
-
-            sectionSubtext.textContent = `Registros de ${currentSection.toUpperCase()}`;
-
-            // Obtener registros y filtrar por sección actual
-            const dayRecords = agendaData[selectedDateStr] || [];
-            const records = dayRecords.filter(r => r.category === currentSection);
-
-            // Reordenar automáticamente de menor a mayor por HORA
-            records.sort((a, b) => a.time.localeCompare(b.time));
-
-            // Renderizar Resumen
-            renderSummary(records);
-
-            // Renderizar Lista
-            recordsList.innerHTML = '';
-
-            if (records.length === 0) {
-                recordsList.innerHTML = `
-                    <div class="text-center py-8 bg-slate-800/50 border border-dashed border-slate-700 rounded-2xl p-6">
-                        <i class="ph ph-calendar-x text-4xl text-slate-500 mb-2"></i>
-                        <p class="text-sm font-medium text-slate-400">Sin registros de ${currentSection} para este día.</p>
-                        <p class="text-xs text-slate-500 mt-1">Presiona "Nuevo" para agregar uno.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            records.forEach(rec => {
-                const card = document.createElement('div');
-                card.className = "bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-md space-y-2 relative overflow-hidden";
-
-                if (currentSection === 'desembolsos') {
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-sky-950/80 text-sky-400 border border-sky-800/50 px-2.5 py-1 rounded-lg font-mono font-bold text-xs flex items-center gap-1">
-                                    <i class="ph ph-clock"></i> ${rec.time}
-                                </span>
-                                <h4 class="font-bold text-white text-base">${escapeHtml(rec.nombreGrupo)}</h4>
-                            </div>
-                            <div class="flex gap-1">
-                                <button onclick="editRecord('${rec.id}')" class="p-1.5 text-slate-400 hover:text-sky-400 rounded-lg hover:bg-slate-700 transition"><i class="ph ph-pencil-simple text-base"></i></button>
-                                <button onclick="deleteRecord('${rec.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-700 transition"><i class="ph ph-trash text-base"></i></button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 bg-slate-900/60 p-2.5 rounded-xl text-xs text-slate-300">
-                            <div><span class="text-slate-500">Renovados:</span> <strong class="text-white">${rec.numRenovados}</strong></div>
-                            <div><span class="text-slate-500">Nuevos:</span> <strong class="text-white">${rec.numNuevos}</strong></div>
-                            <div><span class="text-slate-500">TDD:</span> <strong class="text-white">${rec.numTdd}</strong></div>
-                            <div><span class="text-slate-500">Pólizas Fam:</span> <strong class="text-white">${rec.numPolizas}</strong></div>
-                        </div>
-
-                        <div class="flex justify-between items-center pt-1">
-                            <span class="text-xs text-slate-400">Cartera Desembolsada:</span>
-                            <span class="text-sm font-extrabold text-emerald-400 font-mono">$${parseFloat(rec.carteraDesembolsada || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
-                        </div>
-
-                        ${rec.observaciones ? `<p class="text-xs text-slate-400 bg-slate-900/30 p-2 rounded-lg italic">"${escapeHtml(rec.observaciones)}"</p>` : ''}
-                    `;
-                } else {
-                    // RENOVACIONES
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-emerald-950/80 text-emerald-400 border border-emerald-800/50 px-2.5 py-1 rounded-lg font-mono font-bold text-xs flex items-center gap-1">
-                                    <i class="ph ph-clock"></i> ${rec.time || 'N/A'}
-                                </span>
-                                <h4 class="font-bold text-white text-base">${escapeHtml(rec.nombreGrupo)}</h4>
-                            </div>
-                            <div class="flex gap-1">
-                                <button onclick="editRecord('${rec.id}')" class="p-1.5 text-slate-400 hover:text-emerald-400 rounded-lg hover:bg-slate-700 transition"><i class="ph ph-pencil-simple text-base"></i></button>
-                                <button onclick="deleteRecord('${rec.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-700 transition"><i class="ph ph-trash text-base"></i></button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 bg-slate-900/60 p-2.5 rounded-xl text-xs text-slate-300">
-                            <div><span class="text-slate-500">Integrantes:</span> <strong class="text-white">${rec.numIntegrantesRenov}</strong></div>
-                            <div><span class="text-slate-500">Aperturas MAC:</span> <strong class="text-emerald-400 font-bold">${rec.numMac}</strong></div>
-                        </div>
-
-                        ${rec.nombresAperturan ? `
-                            <div class="text-xs text-slate-300 bg-slate-900/40 p-2 rounded-lg">
-                                <span class="text-slate-500 block text-[10px] font-semibold uppercase">Aperturarán MAC:</span>
-                                <span>${escapeHtml(rec.nombresAperturan)}</span>
-                            </div>
-                        ` : ''}
-
-                        ${rec.observaciones ? `<p class="text-xs text-slate-400 bg-slate-900/30 p-2 rounded-lg italic">"${escapeHtml(rec.observaciones)}"</p>` : ''}
-                    `;
-                }
-
-                recordsList.appendChild(card);
-            });
-        }
-
-        // RENDERIZAR RESUMEN DEL DÍA
-        function renderSummary(records) {
-            const summaryContainer = document.getElementById('dailySummary');
-            summaryContainer.innerHTML = '';
-
-            if (records.length === 0) return;
-
-            if (currentSection === 'desembolsos') {
-                const totalCartera = records.reduce((sum, r) => sum + parseFloat(r.carteraDesembolsada || 0), 0);
-                const totalIntegrantes = records.reduce((sum, r) => sum + parseInt(r.numRenovados || 0) + parseInt(r.numNuevos || 0), 0);
-
-                summaryContainer.innerHTML = `
-                    <div class="bg-slate-800/80 border border-slate-700/60 p-2.5 rounded-xl">
-                        <span class="text-slate-400 block text-[10px] font-semibold">TOTAL CARTERA</span>
-                        <span class="text-sm font-bold text-emerald-400 font-mono">$${totalCartera.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
-                    </div>
-                    <div class="bg-slate-800/80 border border-slate-700/60 p-2.5 rounded-xl">
-                        <span class="text-slate-400 block text-[10px] font-semibold">TOTAL INTEGRANTES</span>
-                        <span class="text-sm font-bold text-sky-400">${totalIntegrantes} <span class="text-[10px] font-normal text-slate-400">personas</span></span>
-                    </div>
-                `;
-            } else {
-                const totalIntegrantes = records.reduce((sum, r) => sum + parseInt(r.numIntegrantesRenov || 0), 0);
-                const totalMac = records.reduce((sum, r) => sum + parseInt(r.numMac || 0), 0);
-
-                summaryContainer.innerHTML = `
-                    <div class="bg-slate-800/80 border border-slate-700/60 p-2.5 rounded-xl">
-                        <span class="text-slate-400 block text-[10px] font-semibold">TOTAL INTEGRANTES</span>
-                        <span class="text-sm font-bold text-emerald-400">${totalIntegrantes}</span>
-                    </div>
-                    <div class="bg-slate-800/80 border border-slate-700/60 p-2.5 rounded-xl">
-                        <span class="text-slate-400 block text-[10px] font-semibold">TOTAL APERTURAS MAC</span>
-                        <span class="text-sm font-bold text-emerald-400">${totalMac}</span>
-                    </div>
-                `;
-            }
-        }
-
-        // GESTIÓN DE MODAL & FORMULARIO
-        function openModal(editId = null) {
-            const modal = document.getElementById('recordModal');
-            const form = document.getElementById('recordForm');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalIcon = document.getElementById('modalIcon');
-            const fieldsDes = document.getElementById('fieldsDesembolso');
-            const fieldsRen = document.getElementById('fieldsRenovacion');
-
-            form.reset();
-            document.getElementById('editRecordId').value = '';
-
-            // Mostrar campos requeridos según la categoría actual
-            if (currentSection === 'desembolsos') {
-                modalTitle.textContent = editId ? "Editar Desembolso" : "Nuevo Desembolso";
-                modalIcon.className = "ph ph-hand-coins text-xl text-sky-400";
-                fieldsDes.classList.remove('hidden');
-                fieldsRen.classList.add('hidden');
-            } else {
-                modalTitle.textContent = editId ? "Editar Renovación" : "Nueva Renovación";
-                modalIcon.className = "ph ph-arrows-counter-clockwise text-xl text-emerald-400";
-                fieldsDes.classList.add('hidden');
-                fieldsRen.classList.remove('hidden');
-            }
-
-            // Si es edición, llenar datos
-            if (editId) {
-                const dayRecords = agendaData[selectedDateStr] || [];
-                const record = dayRecords.find(r => r.id === editId);
-
-                if (record) {
-                    document.getElementById('editRecordId').value = record.id;
-                    document.getElementById('nombreGrupo').value = record.nombreGrupo || '';
-                    document.getElementById('observaciones').value = record.observaciones || '';
-
-                    if (currentSection === 'desembolsos') {
-                        document.getElementById('numRenovados').value = record.numRenovados || 0;
-                        document.getElementById('numNuevos').value = record.numNuevos || 0;
-                        document.getElementById('numTdd').value = record.numTdd || 0;
-                        document.getElementById('numPolizas').value = record.numPolizas || 0;
-                        document.getElementById('carteraDesembolsada').value = record.carteraDesembolsada || '';
-                        document.getElementById('horaDesembolso').value = record.time || '';
-                    } else {
-                        document.getElementById('numIntegrantesRenov').value = record.numIntegrantesRenov || 1;
-                        document.getElementById('numMac').value = record.numMac || 0;
-                        document.getElementById('nombresAperturan').value = record.nombresAperturan || '';
-                        document.getElementById('horaApertura').value = record.time || '';
-                    }
-                }
-            }
-
-            modal.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('recordModal').classList.add('hidden');
-        }
-
-        // GUARDAR REGISTRO (CREAR / EDITAR)
-        function saveRecord(e) {
+        // --- GESTIÓN DE DATOS ---
+        function guardarDesembolso(e) {
             e.preventDefault();
-
-            const editId = document.getElementById('editRecordId').value;
-            const nombreGrupo = document.getElementById('nombreGrupo').value.trim();
-            const observaciones = document.getElementById('observaciones').value.trim();
-
-            let newRecord = {
-                id: editId || 'rec_' + Date.now(),
-                category: currentSection,
-                nombreGrupo,
-                observaciones
+            const item = {
+                id: Date.now(),
+                grupo: document.getElementById('desGrupo').value,
+                renovados: parseInt(document.getElementById('desRenovados').value) || 0,
+                nuevos: parseInt(document.getElementById('desNuevos').value) || 0,
+                tdd: parseInt(document.getElementById('desTdd').value) || 0,
+                polizas: parseInt(document.getElementById('desPolizas').value) || 0,
+                cartera: parseFloat(document.getElementById('desCartera').value) || 0,
+                hora: document.getElementById('desHora').value
             };
 
-            if (currentSection === 'desembolsos') {
-                const time = document.getElementById('horaDesembolso').value;
-                if (!time) {
-                    showToast("Por favor ingresa la hora de desembolso", "error");
-                    return;
-                }
-                newRecord.time = time;
-                newRecord.numRenovados = parseInt(document.getElementById('numRenovados').value) || 0;
-                newRecord.numNuevos = parseInt(document.getElementById('numNuevos').value) || 0;
-                newRecord.numTdd = parseInt(document.getElementById('numTdd').value) || 0;
-                newRecord.numPolizas = parseInt(document.getElementById('numPolizas').value) || 0;
-                newRecord.carteraDesembolsada = parseFloat(document.getElementById('carteraDesembolsada').value) || 0;
-            } else {
-                const time = document.getElementById('horaApertura').value;
-                if (!time) {
-                    showToast("Por favor ingresa el horario de apertura", "error");
-                    return;
-                }
-                newRecord.time = time;
-                newRecord.numIntegrantesRenov = parseInt(document.getElementById('numIntegrantesRenov').value) || 0;
-                newRecord.numMac = parseInt(document.getElementById('numMac').value) || 0;
-                newRecord.nombresAperturan = document.getElementById('nombresAperturan').value.trim();
-            }
+            if (!db.desembolsos[selectedDateStr]) db.desembolsos[selectedDateStr] = [];
+            db.desembolsos[selectedDateStr].push(item);
+            
+            // Ordenar por hora
+            db.desembolsos[selectedDateStr].sort((a, b) => a.hora.localeCompare(b.hora));
 
-            if (!agendaData[selectedDateStr]) {
-                agendaData[selectedDateStr] = [];
-            }
+            persistAndRefresh();
+            document.getElementById('formDesembolso').reset();
+            document.getElementById('desHora').value = new Date().toTimeString().substring(0, 5);
+        }
 
-            if (editId) {
-                // Reemplazar existente
-                const index = agendaData[selectedDateStr].findIndex(r => r.id === editId);
-                if (index !== -1) {
-                    agendaData[selectedDateStr][index] = newRecord;
-                }
-            } else {
-                // Nuevo registro
-                agendaData[selectedDateStr].push(newRecord);
-            }
+        function guardarRenovacion(e) {
+            e.preventDefault();
+            const item = {
+                id: Date.now(),
+                grupo: document.getElementById('renGrupo').value,
+                integrantes: parseInt(document.getElementById('renIntegrantes').value) || 0,
+                mac: parseInt(document.getElementById('renMac').value) || 0,
+                nombres: document.getElementById('renNombresApertura').value,
+                hora: document.getElementById('renHora').value
+            };
 
-            saveToLocalStorage();
-            closeModal();
+            if (!db.renovaciones[selectedDateStr]) db.renovaciones[selectedDateStr] = [];
+            db.renovaciones[selectedDateStr].push(item);
+            
+            // Ordenar por hora
+            db.renovaciones[selectedDateStr].sort((a, b) => a.hora.localeCompare(b.hora));
+
+            persistAndRefresh();
+            document.getElementById('formRenovacion').reset();
+            document.getElementById('renHora').value = new Date().toTimeString().substring(0, 5);
+        }
+
+        function persistAndRefresh() {
+            localStorage.setItem('agenda_financiera_db', JSON.stringify(db));
             renderCalendar();
-            renderDailyRecords();
-            showToast(editId ? "Registro actualizado" : "Registro guardado");
+            renderSelectedDayData();
         }
 
-        // EDITAR REGISTRO
-        function editRecord(id) {
-            openModal(id);
+        function renderSelectedDayData() {
+            document.getElementById('titleDesDia').innerText = `Desembolsos del día: ${selectedDateStr}`;
+            document.getElementById('titleRenDia').innerText = `Renovaciones del día: ${selectedDateStr}`;
+
+            // Render Desembolsos
+            const desList = db.desembolsos[selectedDateStr] || [];
+            const containerDes = document.getElementById('listDesembolsos');
+            containerDes.innerHTML = '';
+
+            let totalCartera = 0, totalTdd = 0, totalPolizas = 0, totalInt = 0;
+
+            if (desList.length === 0) {
+                containerDes.innerHTML = `<div class="empty-state">No hay desembolsos registrados para este día.</div>`;
+            } else {
+                desList.forEach((item, idx) => {
+                    totalCartera += item.cartera;
+                    totalTdd += item.tdd;
+                    totalPolizas += item.polizas;
+                    totalInt += (item.renovados + item.nuevos);
+
+                    containerDes.innerHTML += `
+                        <div class="record-item desembolso">
+                            <div class="record-header">
+                                <span>⏰ ${item.hora} - ${item.grupo}</span>
+                                <span style="color: var(--accent-success);">$${item.cartera.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                            </div>
+                            <div class="record-details">
+                                <div>Renovados: <strong>${item.renovados}</strong></div>
+                                <div>Nuevos: <strong>${item.nuevos}</strong></div>
+                                <div>TDD: <strong>${item.tdd}</strong></div>
+                                <div>Pólizas: <strong>${item.polizas}</strong></div>
+                            </div>
+                            <div style="text-align: right; margin-top: 6px;">
+                                <button onclick="eliminarRegistro('desembolsos', '${selectedDateStr}', ${item.id})" style="background:none; border:none; color:var(--accent-danger); font-size:0.75rem; cursor:pointer;">Eliminar</button>
+                            </div>
+                        </div>`;
+                });
+            }
+            document.getElementById('sumCartera').innerText = `$${totalCartera.toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+            document.getElementById('sumTddPol').innerText = `${totalTdd} / ${totalPolizas}`;
+            document.getElementById('sumIntegrantes').innerText = totalInt;
+
+            // Render Renovaciones
+            const renList = db.renovaciones[selectedDateStr] || [];
+            const containerRen = document.getElementById('listRenovaciones');
+            containerRen.innerHTML = '';
+
+            let totalRenInt = 0, totalRenMac = 0;
+
+            if (renList.length === 0) {
+                containerRen.innerHTML = `<div class="empty-state">No hay renovaciones registradas para este día.</div>`;
+            } else {
+                renList.forEach((item, idx) => {
+                    totalRenInt += item.integrantes;
+                    totalRenMac += item.mac;
+
+                    containerRen.innerHTML += `
+                        <div class="record-item renovacion">
+                            <div class="record-header">
+                                <span>⏰ ${item.hora} - ${item.grupo}</span>
+                                <span style="color: var(--accent-warning);">MAC: ${item.mac}</span>
+                            </div>
+                            <div class="record-details" style="grid-template-columns: 1fr;">
+                                <div>Integrantes: <strong>${item.integrantes}</strong></div>
+                                <div>Aperturan: <strong>${item.nombres}</strong></div>
+                            </div>
+                            <div style="text-align: right; margin-top: 6px;">
+                                <button onclick="eliminarRegistro('renovaciones', '${selectedDateStr}', ${item.id})" style="background:none; border:none; color:var(--accent-danger); font-size:0.75rem; cursor:pointer;">Eliminar</button>
+                            </div>
+                        </div>`;
+                });
+            }
+            document.getElementById('sumRenIntegrantes').innerText = totalRenInt;
+            document.getElementById('sumRenMac').innerText = totalRenMac;
         }
 
-        // ELIMINAR REGISTRO
-        function deleteRecord(id) {
-            if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
-                if (agendaData[selectedDateStr]) {
-                    agendaData[selectedDateStr] = agendaData[selectedDateStr].filter(r => r.id !== id);
-                    if (agendaData[selectedDateStr].length === 0) {
-                        delete agendaData[selectedDateStr];
-                    }
-                    saveToLocalStorage();
-                    renderCalendar();
-                    renderDailyRecords();
-                    showToast("Registro eliminado");
-                }
+        function eliminarRegistro(tipo, fecha, id) {
+            if (confirm('¿Estás seguro de eliminar este registro?')) {
+                db[tipo][fecha] = db[tipo][fecha].filter(item => item.id !== id);
+                if (db[tipo][fecha].length === 0) delete db[tipo][fecha];
+                persistAndRefresh();
             }
         }
 
-        // FUNCIONES DE RESPALDO (EXPORTAR / IMPORTAR)
-        function exportData() {
-            try {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(agendaData, null, 2));
-                const downloadAnchor = document.createElement('a');
-                const dateStr = formatDateKey(new Date());
-                
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", `agenda_respaldo_${dateStr}.json`);
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-
-                showToast("Respaldo descargado exitosamente");
-            } catch (e) {
-                console.error(e);
-                showToast("Error al exportar datos", "error");
-            }
+        // --- RESPALDO ---
+        function exportarRespaldo() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `respaldo_agenda_${formatDateKey(new Date())}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
         }
 
-        function importData(event) {
+        function importarRespaldo(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedJSON = JSON.parse(e.target.result);
-                    if (typeof importedJSON === 'object' && importedJSON !== null) {
-                        if (confirm("Se reemplazarán los datos actuales con los del archivo seleccionado. ¿Deseas continuar?")) {
-                            agendaData = importedJSON;
-                            saveToLocalStorage();
-                            renderCalendar();
-                            renderDailyRecords();
-                            showToast("Respaldo restaurado con éxito");
-                        }
+                    const imported = JSON.parse(e.target.result);
+                    if (imported && imported.desembolsos && imported.renovaciones) {
+                        db = imported;
+                        persistAndRefresh();
+                        alert('¡Respaldo importado correctamente!');
                     } else {
-                        showToast("El archivo no tiene un formato válido", "error");
+                        alert('El archivo no tiene el formato correcto.');
                     }
                 } catch (err) {
-                    console.error(err);
-                    showToast("Error al leer el archivo JSON", "error");
+                    alert('Error al leer el archivo JSON.');
                 }
             };
             reader.readAsText(file);
         }
 
-        function clearAllData() {
-            if (confirm("¡ATENCIÓN! Se borrarán todos tus datos de la agenda. Esta acción no se puede deshacer. ¿Deseas continuar?")) {
-                agendaData = {};
-                localStorage.removeItem('agenda_desembolsos_renovaciones');
-                renderCalendar();
-                renderDailyRecords();
-                showToast("Todos los datos fueron borrados");
-            }
-        }
-
-        // MENSAJES FLOTANTES (TOAST)
-        function showToast(message, type = "success") {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            const toastIcon = document.getElementById('toastIcon');
-
-            toastMessage.textContent = message;
-
-            if (type === "error") {
-                toastIcon.className = "ph ph-x-circle text-rose-400 text-base";
-            } else {
-                toastIcon.className = "ph ph-check-circle text-emerald-400 text-base";
-            }
-
-            toast.classList.remove('opacity-0', 'pointer-events-none');
-            toast.classList.add('opacity-100');
-
-            setTimeout(() => {
-                toast.classList.remove('opacity-100');
-                toast.classList.add('opacity-0', 'pointer-events-none');
-            }, 3000);
-        }
-
-        // UTILIDAD: ESCAPAR HTML PARA PREVENIR XSS
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
+        // Iniciar aplicación al cargar
+        window.onload = initApp;
     </script>
 </body>
 </html>
-```
